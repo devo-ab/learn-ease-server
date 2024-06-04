@@ -1,5 +1,5 @@
 
-const { MongoClient, ServerApiVersion } = require("mongodb");const express = require("express");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");const express = require("express");
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
@@ -115,11 +115,32 @@ async function run() {
 
     // user related api
 
+    // admin api
+    app.get("/class", async(req, res) => {
+      const result = await classCollection.find().toArray();
+      res.send(result);
+    });
+    // admin api
+
     // teacher api
+    app.get("/class/:email", async(req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/class", async(req, res) => {
       const classInfo = req.body;
       console.log(classInfo);
       const result = await classCollection.insertOne(classInfo);
+      res.send(result);
+    });
+
+    app.delete("/class/:id", async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await classCollection.deleteOne(query);
       res.send(result);
     });
     // teacher api
