@@ -30,7 +30,7 @@ async function run() {
     await client.connect();
 
     // collection
-    const usersCollection = client.db("learnEaseDB").collection("users");
+    const userCollection = client.db("learnEaseDB").collection("users");
     // collection
 
     // jwt related api
@@ -71,14 +71,44 @@ async function run() {
     // database api start
     // user related api
 
+    app.get('/users/admin/:email', verifyToken ,async(req, res) => {
+      const email = req.params.email;
+      console.log('from admin',email);
+      if(email !== req.decoded.email){
+        return res.status(403).send({ message : "unauthorized access"})
+      }
+      const query = {email: email};
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if(user){
+        admin = user?.role === 'admin'
+      } 
+      res.send({admin})
+    });
+
+    app.get('/users/teacher/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      console.log('from teacher',email);
+      if(email !== req.decoded.email){
+        return res.status(403).send({ message : "unauthorized access"})
+      }
+      const query = {email: email};
+      const user = await userCollection.findOne(query);
+      let teacher = false;
+      if(user){
+        teacher = user?.role === 'teacher'
+      } 
+      res.send({teacher})
+    });
+
     app.post("/users", async (req, res) => {
       const userInfo = req.body;
       const query = { email: userInfo.email };
-      const existingUser = await usersCollection.findOne(query);
+      const existingUser = await userCollection.findOne(query);
       if (existingUser) {
         return res.send({ message: "user already exist", insertedId: null });
       }
-      const result = await usersCollection.insertOne(userInfo);
+      const result = await userCollection.insertOne(userInfo);
       res.send(result);
     });
 
