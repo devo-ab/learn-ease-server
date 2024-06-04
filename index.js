@@ -31,6 +31,7 @@ async function run() {
 
     // collection
     const userCollection = client.db("learnEaseDB").collection("users");
+    const classCollection = client.db("learnEaseDB").collection("class");
     // collection
 
     // jwt related api
@@ -113,6 +114,15 @@ async function run() {
     });
 
     // user related api
+
+    // teacher api
+    app.post("/class", async(req, res) => {
+      const classInfo = req.body;
+      console.log(classInfo);
+      const result = await classCollection.insertOne(classInfo);
+      res.send(result);
+    });
+    // teacher api
     // database api end
 
     // Send a ping to confirm a successful connection
