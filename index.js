@@ -74,7 +74,7 @@ async function run() {
 
     app.get('/users/admin/:email', verifyToken ,async(req, res) => {
       const email = req.params.email;
-      console.log('from admin',email);
+      // console.log('from admin',email);
       if(email !== req.decoded.email){
         return res.status(403).send({ message : "unauthorized access"})
       }
@@ -89,7 +89,7 @@ async function run() {
 
     app.get('/users/teacher/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
-      console.log('from teacher',email);
+      // console.log('from teacher',email);
       if(email !== req.decoded.email){
         return res.status(403).send({ message : "unauthorized access"})
       }
@@ -113,6 +113,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/profile/:email", async (req, res) => {
+      const email = req.params.email;
+      // console.log(email)
+      const query = {email: email};
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
     // user related api
 
     // admin api
@@ -127,6 +135,31 @@ async function run() {
       const email = req.params.email;
       const query = {email: email};
       const result = await classCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/updateclass/:id", async (req, res) => {
+      const id = req.params.id;
+      // console.log("updated id",id)
+      const query = {_id: new ObjectId(id)};
+      const result = await classCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.patch("/updateclass/:id", async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)};
+      const updatedClass = {
+        $set: {
+          title: item.title,
+          image: item.image,
+          price: item.price,
+          shortDes: item.shortDes,
+          description: item.description
+        }
+      }
+      const result = await classCollection.updateOne(filter, updatedClass);
       res.send(result);
     });
 
