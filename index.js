@@ -163,6 +163,19 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/classtatus/:id", async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const updateStatus = {
+        $set : {
+          status : item.status
+        }
+      }
+      const filter = {_id : new ObjectId(id)};
+      const result = await classCollection.updateOne(filter, updateStatus);
+      res.send(result)
+    });
+
     app.post("/class", async(req, res) => {
       const classInfo = req.body;
       console.log(classInfo);
