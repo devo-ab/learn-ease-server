@@ -128,6 +128,37 @@ async function run() {
       const result = await classCollection.find().toArray();
       res.send(result);
     });
+
+    app.get("/alluser", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result)
+    });
+
+    app.patch("/user/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const filter = {_id: new ObjectId(id)};
+      const updatedRole = {
+        $set:{
+          role: "admin"
+        }
+      }
+      const result = await userCollection.updateOne(filter, updatedRole);
+      res.send(result);
+    });
+
+    app.patch("/classtatus/:id", async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const updateStatus = {
+        $set : {
+          status : item.status
+        }
+      }
+      const filter = {_id : new ObjectId(id)};
+      const result = await classCollection.updateOne(filter, updateStatus);
+      res.send(result)
+    });
     // admin api
 
     // teacher api
@@ -163,18 +194,6 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/classtatus/:id", async (req, res) => {
-      const item = req.body;
-      const id = req.params.id;
-      const updateStatus = {
-        $set : {
-          status : item.status
-        }
-      }
-      const filter = {_id : new ObjectId(id)};
-      const result = await classCollection.updateOne(filter, updateStatus);
-      res.send(result)
-    });
 
     app.post("/class", async(req, res) => {
       const classInfo = req.body;
