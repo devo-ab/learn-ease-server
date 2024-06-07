@@ -32,6 +32,7 @@ async function run() {
     // collection
     const userCollection = client.db("learnEaseDB").collection("users");
     const classCollection = client.db("learnEaseDB").collection("class");
+    const teacherCollection = client.db("learnEaseDB").collection("teaRequest");
     // collection
 
     // jwt related api
@@ -134,6 +135,11 @@ async function run() {
       res.send(result)
     });
 
+    app.get("/request", async (req, res) => {
+      const result = await teacherCollection.find().toArray();
+      res.send(result);
+    });
+
     app.patch("/user/admin/:id", async (req, res) => {
       const id = req.params.id;
       console.log(id)
@@ -158,6 +164,27 @@ async function run() {
       const filter = {_id : new ObjectId(id)};
       const result = await classCollection.updateOne(filter, updateStatus);
       res.send(result)
+    });
+
+    app.patch("/teacherrequ/:email", async (req, res) => {
+      const email = req.params.email;
+      const info = req.body;
+      console.log("bum bum", info);
+      const filter = {email: email};
+      const status = {
+        $set: {
+          status : req.body.status
+        }
+      };
+      const role = {
+        $set: {
+          role: req.body.role
+        }
+      };
+
+      const statusResult = await teacherCollection.updateOne(filter, status);
+      const roleResult = await userCollection.updateOne(filter, role);
+      res.send({statusResult, roleResult})
     });
     // admin api
 
@@ -209,6 +236,19 @@ async function run() {
       res.send(result);
     });
     // teacher api
+
+    app.get("/teacher/:email", async(req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await teacherCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.post("/teacher", async (req, res) => {
+      const info = req.body;
+      const result = await teacherCollection.insertOne(info);
+      res.send(result);
+    });
     // database api end
 
     // Send a ping to confirm a successful connection
