@@ -256,6 +256,13 @@ async function run() {
       const result = await teacherCollection.deleteOne(query);
       res.send(result);
     });
+
+    app.get("/allclasses", async(req, res) => {
+      const info = "approved";
+      const query = {status: info};
+      const result = await classCollection.find(query).toArray();
+      res.send(result);
+    });
     // database api end
 
     // Send a ping to confirm a successful connection
