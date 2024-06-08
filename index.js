@@ -263,6 +263,18 @@ async function run() {
       const result = await classCollection.find(query).toArray();
       res.send(result);
     });
+
+    app.get("/classdetails/:id", async(req, res) => {
+      const id = req.params.id;
+      const query = {_id : new ObjectId(id)};
+      const result = await classCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/highlighted", async (req, res) => {
+      const result = await classCollection.find().sort({totalEnroll: -1}).toArray()
+      res.send(result);
+    });
     // database api end
 
     // Send a ping to confirm a successful connection
