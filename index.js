@@ -249,6 +249,13 @@ async function run() {
       const result = await teacherCollection.insertOne(info);
       res.send(result);
     });
+
+    app.delete("/teacher/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await teacherCollection.deleteOne(query);
+      res.send(result);
+    });
     // database api end
 
     // Send a ping to confirm a successful connection
