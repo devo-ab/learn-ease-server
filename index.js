@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");const exp
 const cors = require("cors");
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -33,6 +34,8 @@ async function run() {
     const userCollection = client.db("learnEaseDB").collection("users");
     const classCollection = client.db("learnEaseDB").collection("class");
     const teacherCollection = client.db("learnEaseDB").collection("teaRequest");
+    const enrollCollection = client.db("learnEaseDB").collection("enrollClasses");
+    const assignmentCollection = client.db("learnEaseDB").collection("assignment");
     // collection
 
     // jwt related api
@@ -71,6 +74,26 @@ async function run() {
     // jwt related api
 
     // database api start
+
+    // payment related api
+    // app.post('/create-payment-intent', async(req, res) => {
+    //   const {price} = req.body;
+    //   const amount = parseInt(price * 100);
+    //   console.log('amount inside the intent', amount)
+
+    //   const paymentIntent = await stripe.paymentIntents.create({
+    //     amount: amount,
+    //     currency: 'usd',
+    //     payment_method_types: ['card']
+    //   });
+
+    //   res.send({
+    //     clientSecret: paymentIntent.client_secret
+    //   });
+    // });
+    // payment related api
+
+
     // user related api
 
     app.get('/users/admin/:email', verifyToken ,async(req, res) => {
@@ -204,6 +227,14 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/teaclassdetails/:id", async(req, res) => {
+      const id = req.params.id;
+      console.log("tut tut", id)
+      const query = {_id: new ObjectId(id)};
+      const result = await classCollection.findOne(query);
+      res.send(result)
+    });
+
     app.patch("/updateclass/:id", async (req, res) => {
       const item = req.body;
       const id = req.params.id;
@@ -219,6 +250,21 @@ async function run() {
       }
       const result = await classCollection.updateOne(filter, updatedClass);
       res.send(result);
+    });
+
+    app.post("/assignment", async(req, res) => {
+      const info = req.body;
+      const classId = info.classId;
+      const totalAssignment = info.assignmentCount;
+      const filter = {_id: new ObjectId(classId)};
+      const updateInfo = {
+        $set: {
+          totalAssignment: totalAssignment
+        }
+      }
+      const assignResult = await assignmentCollection.insertOne(info);
+      const totalAssignResult = await classCollection.updateOne(filter, updateInfo);
+      res.send({assignResult, totalAssignResult})
     });
 
 
@@ -271,8 +317,31 @@ async function run() {
       res.send(result);
     });
 
+
     app.get("/highlighted", async (req, res) => {
       const result = await classCollection.find().sort({totalEnroll: -1}).toArray()
+      res.send(result);
+    });
+
+    app.post("/enroll", async(req, res) => {
+      const info = req.body;
+      const enroll = req.body.enroll;
+      const classId = req.body.classId;
+      const updatedEnroll = {
+        $set: {
+          totalEnroll : enroll
+        }
+      }
+      const filter = {_id : new ObjectId(classId)};
+      const enrollResult = await enrollCollection.insertOne(info);
+      const countResult = await classCollection.updateOne(filter,updatedEnroll)
+      res.send({enrollResult, countResult});
+    });
+
+    app.get("/enroll/:email", async(req, res) => {
+      const email = req.params.email;
+      const query = {userEmail: email};
+      const result = await enrollCollection.find(query).toArray();
       res.send(result);
     });
     // database api end
