@@ -332,7 +332,7 @@ async function run() {
     });
 
     app.get("/highlighted", async (req, res) => {
-      const result = await classCollection.find().sort({ totalEnroll: -1 }).toArray();
+      const result = await classCollection.find().limit(10).sort({ totalEnroll: -1 }).toArray();
       res.send(result);
     });
 
