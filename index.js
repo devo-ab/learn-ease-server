@@ -336,7 +336,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/enroll", verifyToken, async (req, res) => {
+    app.post("/enroll", async (req, res) => {
       const info = req.body;
       const enroll = req.body.enroll;
       const classId = req.body.classId;
