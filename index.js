@@ -3,12 +3,17 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173', 'https://learn-ease-ccdbe.web.app', 'https://learn-ease-ccdbe.firebaseapp.com'
+  ]
+}));
 app.use(express.json());
 // middleware
 
@@ -28,7 +33,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     // collection
     const userCollection = client.db("learnEaseDB").collection("users");
@@ -148,22 +153,32 @@ async function run() {
     // user related api
 
     // admin api
-    app.get("/class", async (req, res) => {
+    app.get("/class",verifyToken, verifyAdmin, async (req, res) => {
       const result = await classCollection.find().toArray();
       res.send(result);
     });
 
-    app.get("/alluser", async (req, res) => {
+    app.get("/alluser", verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
 
-    app.get("/request", async (req, res) => {
+    app.get("/request",verifyToken, verifyAdmin, async (req, res) => {
       const result = await teacherCollection.find().toArray();
       res.send(result);
     });
 
-    app.patch("/user/admin/:id", async (req, res) => {
+    // app.get("/search/:text", verifyToken, verifyAdmin, async(req, res) => {
+    //   const searchText = req.params.text;
+    //   // console.log(info)
+    //   if(searchText){
+    //     query.name = { $regex: searchText, $option: "i"};
+    //   }
+    //   const result = await userCollection.find(query).toArray();
+    //   res.send(result);
+    // });
+
+    app.patch("/user/admin/:id",verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       console.log(id);
       const filter = { _id: new ObjectId(id) };
@@ -176,7 +191,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/classtatus/:id", async (req, res) => {
+    app.patch("/classtatus/:id",verifyToken, verifyAdmin, async (req, res) => {
       const item = req.body;
       const id = req.params.id;
       const updateStatus = {
@@ -189,7 +204,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/teacherrequ/:email", async (req, res) => {
+    app.patch("/teacherrequ/:email",verifyToken, verifyAdmin, async (req, res) => {
       const email = req.params.email;
       const info = req.body;
       console.log("bum bum", info);
@@ -212,14 +227,14 @@ async function run() {
     // admin api
 
     // teacher api
-    app.get("/class/:email", async (req, res) => {
+    app.get("/class/:email",verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await classCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.get("/updateclass/:id", async (req, res) => {
+    app.get("/updateclass/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       // console.log("updated id",id)
       const query = { _id: new ObjectId(id) };
@@ -227,15 +242,15 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/teaclassdetails/:id", async (req, res) => {
+    app.get("/teaclassdetails/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
-      console.log("tut tut", id);
+      // console.log("tut tut", id);
       const query = { _id: new ObjectId(id) };
       const result = await classCollection.findOne(query);
       res.send(result);
     });
 
-    app.patch("/updateclass/:id", async (req, res) => {
+    app.patch("/updateclass/:id",verifyToken, async (req, res) => {
       const item = req.body;
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -252,7 +267,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/assignment", async (req, res) => {
+    app.post("/assignment",verifyToken, async (req, res) => {
       const info = req.body;
       const classId = info.classId;
       const totalAssignment = info.assignmentCount;
@@ -267,14 +282,14 @@ async function run() {
       res.send({ assignResult, totalAssignResult });
     });
 
-    app.post("/class", async (req, res) => {
+    app.post("/class", verifyToken, async (req, res) => {
       const classInfo = req.body;
       console.log(classInfo);
       const result = await classCollection.insertOne(classInfo);
       res.send(result);
     });
 
-    app.delete("/class/:id", async (req, res) => {
+    app.delete("/class/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await classCollection.deleteOne(query);
@@ -289,13 +304,13 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/teacher", async (req, res) => {
+    app.post("/teacher", verifyToken, async (req, res) => {
       const info = req.body;
       const result = await teacherCollection.insertOne(info);
       res.send(result);
     });
 
-    app.delete("/teacher/:email", async (req, res) => {
+    app.delete("/teacher/:email",verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await teacherCollection.deleteOne(query);
@@ -321,7 +336,7 @@ async function run() {
       res.send(result);
     });
 
-    app.post("/enroll", async (req, res) => {
+    app.post("/enroll", verifyToken, async (req, res) => {
       const info = req.body;
       const enroll = req.body.enroll;
       const classId = req.body.classId;
@@ -336,7 +351,7 @@ async function run() {
       res.send({ enrollResult, countResult });
     });
 
-    app.get("/enroll/:email", async (req, res) => {
+    app.get("/enroll/:email",verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await enrollCollection.find(query).toArray();
@@ -350,7 +365,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/assignment/:id", async (req, res) => {
+    app.get("/assignment/:id",verifyToken, async (req, res) => {
       const id = req.params.id;
       // console.log("kula kula", id)
       const query = { classId: id };
@@ -365,7 +380,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch("/updateSubmit/:id", async (req, res) => {
+    app.patch("/updateSubmit/:id",verifyToken, async (req, res) => {
       const id = req.params.id;
       const info = req.body;
       const query = {_id: new ObjectId(id)};
@@ -385,10 +400,30 @@ async function run() {
       res.send({assignResult, classResult})
     });
 
-    app.post("/rate", async (req, res) => {
+    app.post("/rate", verifyToken, async (req, res) => {
       const info = req.body;
       const result = await rateCollection.insertOne(info);
       res.send(result);
+    });
+
+    app.get("/rate", async(req, res) => {
+      const result = await rateCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/rate/:id",verifyToken, async(req, res) => {
+      const id = req.params.id;
+      const query = {classId: id};
+      const result = await rateCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/publicuser", async(req, res) => {
+      const query = {status: "approved"}
+      const userResult = await userCollection.find().toArray();
+      const classResult = await classCollection.find(query).toArray();
+      const enrollResult = await enrollCollection.find().toArray();
+      res.send({userResult, classResult, enrollResult});
     });
 
     // app.get("/webdetails", async (req, res) => {
@@ -397,7 +432,7 @@ async function run() {
     // database api end
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
